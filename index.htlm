@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Juragan Ekonomi: Edisi Ular Tangga (IPS Hukum Ekonomi)</title>
+
+  <!-- Google Fonts: Fredoka -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            fredoka: ['Fredoka', 'sans-serif'],
+          },
+          animation: {
+            'bounce-slow': 'bounce 2.2s infinite',
+            'float': 'float 3s ease-in-out infinite',
+            'pop': 'pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-6px)' },
+            },
+            pop: {
+              '0%': { transform: 'scale(0.8)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' },
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom Game Styling & Smooth Transitions */
+    body {
+      font-family: 'Fredoka', sans-serif;
+      background-color: #FEF9C3;
+      background-image:
+        radial-gradient(#FDE047 1.75px, transparent 1.75px),
+        radial-gradient(#FDBA74 1.75px, #FEF9C3 1.75px);
+      background-size: 44px 44px;
+      background-position: 0 0, 22px 22px;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    /* Chunky 3D Arcade / Boardgame Button Style */
+    .btn-3d {
+      transition: all 0.12s ease;
+    }
+    .btn-3d:active:not(:disabled) {
+      transform: translateY(4px);
+      border-bottom-width: 2px;
+    }
+    .btn-3d:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Dice Rolling Keyframes */
+    @keyframes diceShake {
+      0% { transform: rotate(0deg) scale(1); }
+      20% { transform: rotate(-18deg) scale(1.12); }
+      40% { transform: rotate(18deg) scale(1.15); }
+      60% { transform: rotate(-14deg) scale(1.1); }
+      80% { transform: rotate(14deg) scale(1.12); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+    .dice-rolling {
+      animation: diceShake 0.55s ease-in-out infinite;
+    }
+
+    /* Pawn Hop Transition */
+    .pawn-piece {
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.35));
+    }
+
+    /* Confetti Particle */
+    @keyframes confettiFall {
+      0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(105vh) rotate(720deg); opacity: 0.2; }
+    }
+    .confetti {
+      position: fixed;
+      top: -10px;
+      z-index: 60;
+      pointer-events: none;
+      animation: confettiFall linear forwards;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FEF3C7;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #F59E0B;
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col">
+
+  <!-- =========================================================
+       TOAST NOTIFICATION CONTAINER (Pengganti alert())
+       ========================================================= -->
+  <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-11/12 max-w-md pointer-events-none"></div>
+
+  <!-- =========================================================
+       CUSTOM CONFIRMATION MODAL (Pengganti confirm())
+       ========================================================= -->
+  <div id="modal-confirm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white border-4 border-amber-400 rounded-3xl max-w-sm w-full p-6 shadow-2xl animate-pop text-center">
+      <div class="w-16 h-16 mx-auto mb-3 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-3xl">
+        ⚠️
+      </div>
+      <h3 id="confirm-title" class="text-xl font-bold text-slate-800 mb-2">Konfirmasi</h3>
+      <p id="confirm-message" class="text-slate-600 text-sm mb-6">Apakah kamu yakin ingin melanjutkan?</p>
+      <div class="flex gap-3">
+        <button id="confirm-cancel" class="btn-3d flex-1 py-2.5 px-4 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold border-b-4 border-slate-400">
+          Batal
+        </button>
+        <button id="confirm-ok" class="btn-3d flex-1 py-2.5 px-4 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold border-b-4 border-rose-700">
+          Ya, Lanjut
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       HOW TO PLAY MODAL (Aturan Bermain)
+       ========================================================= -->
+  <div id="modal-rules" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white border-4 border-indigo-400 rounded-3xl max-w-lg w-full p-6 shadow-2xl animate-pop max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-2xl font-bold text-indigo-700 flex items-center gap-2">
+          <span>📘</span> Panduan Juragan Ekonomi
+        </h3>
+        <button onclick="toggleRulesModal(false)" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-lg">✕</button>
+      </div>
+      <div class="space-y-3 text-sm sm:text-base text-slate-700">
+        <div class="p-3 rounded-2xl bg-amber-50 border-2 border-amber-200 flex gap-3 items-start">
+          <span class="text-2xl">🎲</span>
+          <div>
+            <p class="font-bold text-amber-800">1. Lempar Dadu & Melangkah</p>
+            <p>Pemain 1 (Merah) dan Pemain 2 (Biru) bergantian mengocok dadu untuk melangkah di papan zig-zag dari kotak <b>1</b> menuju kotak <b>25 (Juragan Sukses)</b>.</p>
+          </div>
+        </div>
+        <div class="p-3 rounded-2xl bg-indigo-50 border-2 border-indigo-200 flex gap-3 items-start">
+          <span class="text-2xl">💡</span>
+          <div>
+            <p class="font-bold text-indigo-800">2. Tantangan Kuis Hukum Ekonomi</p>
+            <p>Setiap mendarat di sebuah kotak, muncul soal IPS tentang <b>Hukum Permintaan, Penawaran, Ceteris Paribus, Gossen I & II, Engel, Kurva, & Keseimbangan Pasar</b>.</p>
+          </div>
+        </div>
+        <div class="p-3 rounded-2xl bg-emerald-50 border-2 border-emerald-200 flex gap-3 items-start">
+          <span class="text-2xl">🪜</span>
+          <div>
+            <p class="font-bold text-emerald-800">3. Kotak Spesial Tangga Untung (⭐ 📈)</p>
+            <p>Jika mendarat di pangkal tangga (Kotak <b>3, 6, 12</b>) dan menjawab kuis dengan <b>BENAR</b>, pion langsung naik tangga menuju keuntungan besar!</p>
+          </div>
+        </div>
+        <div class="p-3 rounded-2xl bg-rose-50 border-2 border-rose-200 flex gap-3 items-start">
+          <span class="text-2xl">🐍</span>
+          <div>
+            <p class="font-bold text-rose-800">4. Kotak Spesial Ular Rugi (⭐ 📉)</p>
+            <p>Jika mendarat di kepala ular (Kotak <b>14, 19, 24</b>), jawab kuis dengan <b>BENAR</b> untuk menangkal risiko rugi! Jika salah, pion merosot turun mengikuti ekor ular.</p>
+          </div>
+        </div>
+      </div>
+      <button onclick="toggleRulesModal(false)" class="btn-3d mt-5 w-full py-3 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-lg border-b-4 border-indigo-700">
+        Siap Mengerti! 👍
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       SCREEN 1: START SCREEN (HALAMAN AWAL)
+       ========================================================= -->
+  <main id="screen-start" class="flex-1 flex items-center justify-center p-4 sm:p-6">
+    <div class="w-full max-w-xl bg-white/95 backdrop-blur border-4 border-amber-400 rounded-[2rem] p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <!-- Decorative Corner Coins -->
+      <div class="absolute -top-6 -right-6 w-24 h-24 bg-amber-200/60 rounded-full pointer-events-none"></div>
+      <div class="absolute -bottom-8 -left-8 w-28 h-28 bg-emerald-200/50 rounded-full pointer-events-none"></div>
+
+      <!-- Header Branding -->
+      <div class="text-center mb-6 relative">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100 border-2 border-amber-300 text-amber-800 text-xs sm:text-sm font-bold mb-3 animate-float">
+          <span>📊</span> MEDIA PEMBELAJARAN IPS • HUKUM EKONOMI
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-amber-500 to-rose-500 tracking-tight leading-tight">
+          JURAGAN EKONOMI
+        </h1>
+        <p class="text-lg sm:text-xl font-bold text-indigo-600 mt-0.5">
+          Edisi Ular Tangga 🎲📈
+        </p>
+      </div>
+
+      <!-- Player Registration Form -->
+      <form id="start-form" class="space-y-4 relative">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Player 1 (Red) -->
+          <div class="p-3.5 rounded-2xl bg-rose-50 border-2 border-rose-300">
+            <label for="input-p1" class="flex items-center gap-2 text-sm font-bold text-rose-700 mb-1.5">
+              <span class="w-6 h-6 rounded-full bg-rose-500 text-white inline-flex items-center justify-center text-xs shadow">1</span>
+              Pemain 1 (Merah)
+            </label>
+            <input
+              id="input-p1"
+              type="text"
+              maxlength="18"
+              placeholder="Contoh: Raka"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border-2 border-rose-200 focus:border-rose-500 focus:outline-none font-semibold text-slate-800 placeholder:text-slate-400"
+              required
+            />
+          </div>
+
+          <!-- Player 2 (Blue) -->
+          <div class="p-3.5 rounded-2xl bg-sky-50 border-2 border-sky-300">
+            <label for="input-p2" class="flex items-center gap-2 text-sm font-bold text-sky-700 mb-1.5">
+              <span class="w-6 h-6 rounded-full bg-sky-500 text-white inline-flex items-center justify-center text-xs shadow">2</span>
+              Pemain 2 (Biru)
+            </label>
+            <input
+              id="input-p2"
+              type="text"
+              maxlength="18"
+              placeholder="Contoh: Nabila"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border-2 border-sky-200 focus:border-sky-500 focus:outline-none font-semibold text-slate-800 placeholder:text-slate-400"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Team / Class & School -->
+        <div class="p-3.5 rounded-2xl bg-amber-50 border-2 border-amber-300">
+          <label for="input-team" class="flex items-center gap-2 text-sm font-bold text-amber-800 mb-1.5">
+            <span>🏫</span> Kelas & Sekolah (Identitas Tim)
+          </label>
+          <input
+            id="input-team"
+            type="text"
+            maxlength="36"
+            placeholder="Contoh: Kelas 8A - SMPN 1 Nusantara"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-white border-2 border-amber-200 focus:border-amber-500 focus:outline-none font-semibold text-slate-800 placeholder:text-slate-400"
+            required
+          />
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-2 space-y-3">
+          <button
+            type="submit"
+            class="btn-3d w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-lg sm:text-xl border-b-4 border-emerald-700 shadow-lg flex items-center justify-center gap-2"
+          >
+            <span>MULAI PERMAINAN</span>
+            <span>🚀</span>
+          </button>
+
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onclick="showScreen('leaderboard')"
+              class="btn-3d py-3 px-4 rounded-2xl bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold text-sm sm:text-base border-b-4 border-amber-600 flex items-center justify-center gap-1.5"
+            >
+              <span>🏆</span>
+              <span>Leaderboard</span>
+            </button>
+            <button
+              type="button"
+              onclick="toggleRulesModal(true)"
+              class="btn-3d py-3 px-4 rounded-2xl bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold text-sm sm:text-base border-b-4 border-indigo-300 flex items-center justify-center gap-1.5"
+            >
+              <span>📘</span>
+              <span>Aturan Main</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- =========================================================
+       SCREEN 2: GAME SCREEN (HALAMAN PERMAINAN)
+       ========================================================= -->
+  <section id="screen-game" class="hidden flex-1 flex flex-col max-w-6xl w-full mx-auto p-3 sm:p-5 gap-3 sm:gap-4">
+    <!-- Top Navigation Bar -->
+    <header class="bg-white/95 border-4 border-amber-300 rounded-2xl px-4 py-2.5 shadow-md flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <span class="text-2xl">💹</span>
+        <div>
+          <h2 class="font-bold text-base sm:text-lg text-slate-800 leading-none">Juragan Ekonomi</h2>
+          <p id="hud-team" class="text-xs font-semibold text-amber-700 mt-0.5">Kelas - Sekolah</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          id="btn-sound"
+          onclick="toggleMute()"
+          title="Suara Efek"
+          class="btn-3d px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold text-sm border-b-4 border-amber-300"
+        >
+          🔊
+        </button>
+        <button
+          onclick="toggleRulesModal(true)"
+          title="Aturan Main"
+          class="btn-3d px-3 py-2 rounded-xl bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold text-sm border-b-4 border-indigo-300"
+        >
+          📘
+        </button>
+        <button
+          onclick="confirmExitGame()"
+          title="Keluar ke Menu"
+          class="btn-3d px-3 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-sm border-b-4 border-rose-300"
+        >
+          🏠 Menu
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Game Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start flex-1">
+
+      <!-- Left / Center: 5x5 Zig-Zag Game Board -->
+      <div class="lg:col-span-7 flex flex-col items-center">
+        <div class="w-full max-w-[490px] bg-white p-3 sm:p-4 rounded-[2rem] border-4 border-amber-400 shadow-xl relative">
+          <!-- Board Wrapper with Relative Positioning for SVG Overlay -->
+          <div id="board-wrapper" class="relative w-full aspect-square rounded-2xl overflow-hidden border-4 border-amber-600 bg-amber-100">
+            <!-- 5x5 Grid Cells -->
+            <div id="board-grid" class="grid grid-cols-5 grid-rows-5 w-full h-full"></div>
+
+            <!-- SVG Overlay for Snakes & Ladders -->
+            <svg id="board-svg" class="absolute inset-0 w-full h-full pointer-events-none z-10"></svg>
+
+            <!-- Pawn Layer -->
+            <div id="pawn-layer" class="absolute inset-0 pointer-events-none z-20"></div>
+          </div>
+
+          <!-- Legend Bar Under Board -->
+          <div class="mt-3 grid grid-cols-2 gap-2 text-xs font-bold">
+            <div class="px-2.5 py-1.5 rounded-xl bg-emerald-50 border-2 border-emerald-200 text-emerald-800 flex items-center gap-1.5">
+              <span>🪜</span>
+              <span>Tangga Untung: 3→11, 6→15, 12→22</span>
+            </div>
+            <div class="px-2.5 py-1.5 rounded-xl bg-rose-50 border-2 border-rose-200 text-rose-800 flex items-center gap-1.5">
+              <span>🐍</span>
+              <span>Ular Rugi: 14→4, 19→9, 24→16</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Player Status, Turn Indicator, & Interactive Dice -->
+      <div class="lg:col-span-5 flex flex-col gap-3.5 w-full max-w-[490px] mx-auto lg:max-w-none">
+
+        <!-- Active Turn Banner -->
+        <div id="turn-banner" class="rounded-2xl p-3.5 border-4 transition-all duration-300 shadow-md flex items-center justify-between bg-rose-50 border-rose-400">
+          <div class="flex items-center gap-3">
+            <div id="turn-avatar" class="w-11 h-11 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-xl font-bold shadow">
+              🔴
+            </div>
+            <div>
+              <span class="text-xs uppercase tracking-wider font-bold text-slate-500 block">Giliran Bermain</span>
+              <h3 id="turn-player-name" class="text-lg sm:text-xl font-extrabold text-rose-700 leading-tight">Pemain 1</h3>
+            </div>
+          </div>
+          <span id="turn-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow-sm animate-pulse">
+            Siap Kocok!
+          </span>
+        </div>
+
+        <!-- Players Score & Position Cards -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Player 1 Card -->
+          <div id="card-p1" class="bg-white rounded-2xl p-3.5 border-4 border-rose-400 shadow-sm transition-all">
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-700 text-xs font-bold">🔴 Merah</span>
+              <span id="p1-tile-badge" class="text-xs font-extrabold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">Kotak 1/25</span>
+            </div>
+            <p id="p1-name-display" class="font-bold text-base text-slate-800 truncate mb-2">Pemain 1</p>
+            <div class="space-y-1 text-xs font-semibold text-slate-600">
+              <div class="flex justify-between">
+                <span>🎲 Lemparan:</span>
+                <span id="p1-rolls" class="font-bold text-slate-800">0</span>
+              </div>
+              <div class="flex justify-between">
+                <span>✅ Kuis Benar:</span>
+                <span id="p1-correct" class="font-bold text-emerald-600">0</span>
+              </div>
+              <div class="flex justify-between">
+                <span>💰 Poin:</span>
+                <span id="p1-score" class="font-bold text-amber-600">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Player 2 Card -->
+          <div id="card-p2" class="bg-white rounded-2xl p-3.5 border-4 border-slate-200 shadow-sm transition-all opacity-80">
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2 py-0.5 rounded-lg bg-sky-100 text-sky-700 text-xs font-bold">🔵 Biru</span>
+              <span id="p2-tile-badge" class="text-xs font-extrabold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">Kotak 1/25</span>
+            </div>
+            <p id="p2-name-display" class="font-bold text-base text-slate-800 truncate mb-2">Pemain 2</p>
+            <div class="space-y-1 text-xs font-semibold text-slate-600">
+              <div class="flex justify-between">
+                <span>🎲 Lemparan:</span>
+                <span id="p2-rolls" class="font-bold text-slate-800">0</span>
+              </div>
+              <div class="flex justify-between">
+                <span>✅ Kuis Benar:</span>
+                <span id="p2-correct" class="font-bold text-emerald-600">0</span>
+              </div>
+              <div class="flex justify-between">
+                <span>💰 Poin:</span>
+                <span id="p2-score" class="font-bold text-amber-600">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Dice Control Card -->
+        <div class="bg-white rounded-3xl p-4 sm:p-5 border-4 border-indigo-300 shadow-lg flex flex-col items-center text-center">
+          <div class="flex items-center justify-center gap-5 w-full mb-3">
+            <!-- Visual 3D-Styled Dice Face -->
+            <div
+              id="dice-box"
+              onclick="handleRollDice()"
+              class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-white to-slate-100 border-4 border-slate-300 shadow-xl flex items-center justify-center cursor-pointer select-none"
+            >
+              <div id="dice-face" class="grid grid-cols-3 grid-rows-3 gap-1.5 w-14 h-14 sm:w-16 sm:h-16 p-1">
+                <!-- Pips rendered via JS -->
+              </div>
+            </div>
+
+            <div class="text-left flex-1">
+              <p class="text-xs font-bold uppercase text-indigo-500">Kontrol Langkah</p>
+              <p id="dice-status-text" class="text-sm sm:text-base font-bold text-slate-700 mt-0.5">
+                Tekan tombol di bawah untuk mengocok dadu!
+              </p>
+            </div>
+          </div>
+
+          <button
+            id="btn-roll"
+            onclick="handleRollDice()"
+            class="btn-3d w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-extrabold text-lg border-b-4 border-indigo-800 shadow-md flex items-center justify-center gap-2"
+          >
+            <span>🎲</span>
+            <span>KOCOK DADU</span>
+          </button>
+        </div>
+
+        <!-- Live Activity Ticker -->
+        <div class="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-3">
+          <p class="text-xs font-bold text-amber-800 mb-1 flex items-center gap-1.5">
+            <span>📜</span> Catatan Transaksi Langkah:
+          </p>
+          <p id="game-log" class="text-xs sm:text-sm font-medium text-slate-700 leading-snug">
+            Selamat datang di arena Juragan Ekonomi! Giliran pertama dimulai.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       INTERACTIVE QUIZ MODAL (SISTEM KUIS HUKUM EKONOMI)
+       ========================================================= -->
+  <div id="modal-quiz" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-40 hidden items-center justify-center p-3 sm:p-4">
+    <div class="bg-white border-4 border-indigo-500 rounded-[2rem] max-w-xl w-full p-5 sm:p-6 shadow-2xl animate-pop max-h-[92vh] overflow-y-auto">
+      <!-- Top Context & Topic Badges -->
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <span id="quiz-context-badge" class="px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-300">
+          💡 Kuis Kotak 5
+        </span>
+        <span id="quiz-topic-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+          Hukum Permintaan
+        </span>
+      </div>
+
+      <!-- Event Description Alert -->
+      <div id="quiz-event-desc" class="p-3 rounded-2xl bg-slate-100 border-2 border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 mb-4">
+        Jawab pertanyaan berikut dengan tepat!
+      </div>
+
+      <!-- Question Text -->
+      <h3 id="quiz-question" class="text-base sm:text-lg font-bold text-slate-800 leading-snug mb-4">
+        Pertanyaan akan muncul di sini...
+      </h3>
+
+      <!-- Multiple Choice Options -->
+      <div id="quiz-options" class="space-y-2.5">
+        <!-- Buttons injected via JS -->
+      </div>
+
+      <!-- Feedback & Explanation Box (Hidden until answered) -->
+      <div id="quiz-feedback" class="hidden mt-4 p-4 rounded-2xl border-2">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span id="quiz-feedback-icon" class="text-2xl">✅</span>
+          <h4 id="quiz-feedback-title" class="font-extrabold text-base sm:text-lg">Jawaban Benar!</h4>
+        </div>
+        <p id="quiz-explanation" class="text-xs sm:text-sm leading-relaxed mb-3"></p>
+        <button
+          id="btn-quiz-continue"
+          onclick="finishQuizTurn()"
+          class="btn-3d w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base border-b-4 border-indigo-900"
+        >
+          LANJUTKAN PERMAINAN ➡️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       SCREEN 3: GAME OVER SCREEN (HALAMAN SELESAI & PEMENANG)
+       ========================================================= -->
+  <section id="screen-gameover" class="hidden flex-1 flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-white border-4 border-amber-400 rounded-[2rem] p-6 sm:p-8 shadow-2xl text-center animate-pop">
+      <div class="w-24 h-24 mx-auto mb-3 rounded-3xl bg-gradient-to-br from-amber-300 to-yellow-500 flex items-center justify-center text-5xl shadow-lg animate-bounce-slow">
+        👑
+      </div>
+
+      <span class="inline-block px-4 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold uppercase tracking-wider mb-2">
+        Selamat! Juragan Ekonomi Terbaik
+      </span>
+
+      <h2 id="winner-name" class="text-3xl sm:text-4xl font-extrabold text-slate-800 mb-1">
+        Nama Pemenang
+      </h2>
+      <p id="winner-team" class="text-sm font-bold text-indigo-600 mb-5">
+        Kelas 8A - SMPN 1 Nusantara
+      </p>
+
+      <!-- Statistics Grid -->
+      <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-6 grid grid-cols-3 gap-2 text-center">
+        <div class="p-2 bg-white rounded-xl border border-amber-200">
+          <p class="text-xs font-bold text-slate-500">Total Lemparan</p>
+          <p id="stat-winner-rolls" class="text-xl sm:text-2xl font-extrabold text-indigo-600 mt-0.5">0</p>
+          <p class="text-[11px] text-slate-400">kali kocok</p>
+        </div>
+        <div class="p-2 bg-white rounded-xl border border-amber-200">
+          <p class="text-xs font-bold text-slate-500">Kuis Benar</p>
+          <p id="stat-winner-correct" class="text-xl sm:text-2xl font-extrabold text-emerald-600 mt-0.5">0</p>
+          <p class="text-[11px] text-slate-400">jawaban tepat</p>
+        </div>
+        <div class="p-2 bg-white rounded-xl border border-amber-200">
+          <p class="text-xs font-bold text-slate-500">Skor Akhir</p>
+          <p id="stat-winner-score" class="text-xl sm:text-2xl font-extrabold text-amber-600 mt-0.5">0</p>
+          <p class="text-[11px] text-slate-400">poin juragan</p>
+        </div>
+      </div>
+
+      <p id="stat-total-match-rolls" class="text-xs font-semibold text-slate-500 mb-5">
+        Total lemparan dadu seluruh pertandingan: 0 kali
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="space-y-3">
+        <button
+          onclick="restartSamePlayers()"
+          class="btn-3d w-full py-3.5 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg border-b-4 border-emerald-700 flex items-center justify-center gap-2"
+        >
+          <span>🔄</span>
+          <span>MAIN LAGI (PEMAIN SAMA)</span>
+        </button>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            onclick="showScreen('leaderboard')"
+            class="btn-3d py-3 px-4 rounded-2xl bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold text-sm sm:text-base border-b-4 border-amber-600"
+          >
+            🏆 Leaderboard
+          </button>
+          <button
+            onclick="showScreen('start')"
+            class="btn-3d py-3 px-4 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-sm sm:text-base border-b-4 border-slate-400"
+          >
+            🏠 Menu Utama
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SCREEN 4: LEADERBOARD SCREEN (PAPAN PERINGKAT LOCALSTORAGE)
+       ========================================================= -->
+  <section id="screen-leaderboard" class="hidden flex-1 flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-white border-4 border-amber-400 rounded-[2rem] p-5 sm:p-7 shadow-2xl">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-amber-600 flex items-center gap-2">
+            <span>🏆</span> Papan Juara Juragan
+          </h2>
+          <p class="text-xs sm:text-sm font-semibold text-slate-500">Peringkat 3 Besar & Daftar Skor Terbaik</p>
+        </div>
+        <button
+          onclick="showScreen('start')"
+          class="btn-3d px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-sm border-b-4 border-indigo-700"
+        >
+          🏠 Kembali
+        </button>
+      </div>
+
+      <!-- Top 3 Podium -->
+      <div id="podium-container" class="grid grid-cols-3 gap-2 sm:gap-4 items-end mb-6 pt-4 px-1">
+        <!-- Populated dynamically via JS -->
+      </div>
+
+      <!-- Full Leaderboard Table List -->
+      <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl overflow-hidden mb-4">
+        <div class="px-4 py-2.5 bg-amber-100 border-b-2 border-amber-200 flex justify-between text-xs font-extrabold text-amber-900">
+          <span>PERINGKAT & JURAGAN</span>
+          <span>LEMPARAN / SKOR</span>
+        </div>
+        <div id="leaderboard-list" class="divide-y divide-slate-200 max-h-60 overflow-y-auto">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Clear Leaderboard Button -->
+      <div class="flex justify-end">
+        <button
+          onclick="confirmClearLeaderboard()"
+          class="text-xs font-bold text-rose-600 hover:text-rose-800 underline px-2 py-1"
+        >
+          🗑️ Reset Data Leaderboard
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       JAVASCRIPT: AUDIO, BANK SOAL, LOGIKA PAPAN & GAMEPLAY
+       ========================================================= -->
+  <script>
+    /* ===========================================================
+       1. WEB AUDIO API SOUND ENGINE (Tanpa URL Eksternal)
+       =========================================================== */
+    const SoundFX = {
+      ctx: null,
+      muted: false,
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      },
+
+      playTone(freq, type = 'sine', duration = 0.15, delay = 0, gainVal = 0.18) {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime + delay;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, now);
+
+          gain.gain.setValueAtTime(gainVal, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + duration);
+        } catch (e) {
+          // Abaikan jika browser membatasi audio
+        }
+      },
+
+      roll() {
+        // Efek suara kocok dadu beruntun
+        for (let i = 0; i < 6; i++) {
+          this.playTone(220 + Math.random() * 240, 'triangle', 0.06, i * 0.075, 0.15);
+        }
+      },
+
+      step() {
+        // Efek langkah pion melompat
+        this.playTone(440, 'sine', 0.09, 0, 0.16);
+        this.playTone(580, 'sine', 0.08, 0.04, 0.12);
+      },
+
+      correct() {
+        // Melodi ceria jawaban benar
+        this.playTone(523.25, 'triangle', 0.14, 0, 0.22);    // C5
+        this.playTone(659.25, 'triangle', 0.14, 0.11, 0.22); // E5
+        this.playTone(783.99, 'triangle', 0.25, 0.22, 0.25); // G5
+      },
+
+      wrong() {
+        // Nada turun jawaban salah
+        this.playTone(310, 'sawtooth', 0.18, 0, 0.15);
+        this.playTone(245, 'sawtooth', 0.28, 0.16, 0.15);
+      },
+
+      ladder() {
+        // Arpeggio naik tangga untung
+        const notes = [392, 440, 493.88, 587.33, 659.25, 783.99];
+        notes.forEach((n, idx) => this.playTone(n, 'sine', 0.12, idx * 0.07, 0.2));
+      },
+
+      snake() {
+        // Efek meluncur turun ular rugi
+        const notes = [620, 540, 460, 380, 300, 220];
+        notes.forEach((n, idx) => this.playTone(n, 'sawtooth', 0.11, idx * 0.07, 0.14));
+      },
+
+      win() {
+        // Fanfare kemenangan
+        const melody = [
+          { f: 523.25, d: 0.15, t: 0 },
+          { f: 523.25, d: 0.15, t: 0.16 },
+          { f: 523.25, d: 0.15, t: 0.32 },
+          { f: 659.25, d: 0.35, t: 0.48 },
+          { f: 587.33, d: 0.20, t: 0.86 },
+          { f: 659.25, d: 0.20, t: 1.08 },
+          { f: 783.99, d: 0.55, t: 1.30 }
+        ];
+        melody.forEach(m => this.playTone(m.f, 'triangle', m.d, m.t, 0.25));
+      }
+    };
+
+    function toggleMute() {
+      SoundFX.muted = !SoundFX.muted;
+      const btn = document.getElementById('btn-sound');
+      btn.textContent = SoundFX.muted ? '🔇' : '🔊';
+      showToast(SoundFX.muted ? 'Suara dimatikan' : 'Suara diaktifkan', 'info');
+    }
+
+    /* ===========================================================
+       2. BANK SOAL IPS: HUKUM EKONOMI (28 VARIASI SOAL BERKUALITAS)
+       =========================================================== */
+    const QUESTION_BANK = [
+      {
+        topic: 'Hukum Permintaan',
+        question: 'Menurut Hukum Permintaan, apabila harga suatu barang mengalami kenaikan (dengan asumsi ceteris paribus), maka jumlah barang yang diminta oleh konsumen akan...',
+        options: [
+          'Meningkat drastis',
+          'Menurun atau berkurang',
+          'Tetap tidak berubah',
+          'Sama dengan jumlah penawaran'
+        ],
+        correctIndex: 1,
+        explanation: 'Hukum Permintaan menyatakan hubungan berbanding terbalik antara harga dan jumlah barang yang diminta: jika harga naik, jumlah permintaan turun (ceteris paribus).'
+      },
+      {
+        topic: 'Hukum Penawaran',
+        question: 'Ketika harga cabai rawit di pasar melonjak tinggi, para petani dan pedagang berlomba-lomba menjual lebih banyak cabai. Fenomena ini sesuai dengan...',
+        options: [
+          'Hukum Permintaan',
+          'Hukum Gossen I',
+          'Hukum Penawaran',
+          'Hukum Engel'
+        ],
+        correctIndex: 2,
+        explanation: 'Hukum Penawaran menyatakan bahwa semakin tinggi harga suatu barang, semakin banyak jumlah barang yang ditawarkan produsen untuk meraih keuntungan lebih besar.'
+      },
+      {
+        topic: 'Ceteris Paribus',
+        question: 'Dalam kajian hukum ekonomi, istilah "ceteris paribus" memiliki arti...',
+        options: [
+          'Semua harga barang ditentukan pemerintah',
+          'Faktor-faktor lain di luar harga dianggap tetap',
+          'Kebutuhan manusia tidak terbatas',
+          'Pasar berada dalam kondisi monopoli'
+        ],
+        correctIndex: 1,
+        explanation: 'Ceteris paribus berarti faktor-faktor lain selain harga barang itu sendiri (seperti pendapatan, selera, dan harga barang lain) dianggap tetap atau tidak berubah.'
+      },
+      {
+        topic: 'Hukum Gossen I',
+        question: 'Rafi sangat kehausan setelah berolahraga. Gelas es teh pertama terasa sangat nikmat, gelas kedua cukup nikmat, namun pada gelas keempat ia mulai merasa kenyang dan enek. Peristiwa ini menggambarkan...',
+        options: [
+          'Hukum Gossen I (Law of Diminishing Marginal Utility)',
+          'Hukum Gossen II',
+          'Hukum Penawaran Pasar',
+          'Hukum Keseimbangan Harga'
+        ],
+        correctIndex: 0,
+        explanation: 'Hukum Gossen I menyatakan bahwa jika pemenuhan suatu kebutuhan dilakukan secara terus-menerus, kenikmatannya mula-mula tinggi namun semakin lama semakin menurun hingga mencapai titik jenuh.'
+      },
+      {
+        topic: 'Hukum Gossen II',
+        question: 'Ibu Sari memiliki uang Rp100.000 dan membelanjakannya untuk membeli beras, lauk pauk, dan sabun secara proporsional agar seluruh kebutuhannya terpenuhi pada tingkat kepuasan yang seimbang. Prinsip ini sesuai dengan...',
+        options: [
+          'Hukum Engel',
+          'Hukum Gossen II',
+          'Hukum Permintaan Efektif',
+          'Hukum Hasil Lebih yang Semakin Berkurang'
+        ],
+        correctIndex: 1,
+        explanation: 'Hukum Gossen II menjelaskan bahwa manusia berusaha memenuhi berbagai macam kebutuhan yang beraneka ragam sampai pada tingkat intensitas atau kepuasan yang sama.'
+      },
+      {
+        topic: 'Hukum Engel',
+        question: 'Menurut Hukum Engel, apabila pendapatan suatu keluarga meningkat tajam, maka persentase pengeluaran pendapatan untuk kebutuhan pangan (makanan pokok) akan...',
+        options: [
+          'Semakin besar',
+          'Semakin kecil (beralih ke kebutuhan sekunder/tersier)',
+          'Selalu 100% dari pendapatan',
+          'Sama dengan pengeluaran pajak'
+        ],
+        correctIndex: 1,
+        explanation: 'Hukum Engel menyatakan bahwa semakin tinggi tingkat pendapatan rumah tangga, semakin kecil persentase pendapatan yang digunakan untuk konsumsi makanan pokok.'
+      },
+      {
+        topic: 'Kurva Permintaan',
+        question: 'Bentuk kurva permintaan (Demand Curve) pada umumnya digambarkan bergerak miring dari...',
+        options: [
+          'Kiri bawah ke kanan atas (berslope positif)',
+          'Kiri atas ke kanan bawah (berslope negatif)',
+          'Horizontal sejajar sumbu jumlah barang',
+          'Vertikal sejajar sumbu harga'
+        ],
+        correctIndex: 1,
+        explanation: 'Kurva permintaan miring dari kiri atas ke kanan bawah (slope negatif) karena hubungan antara harga (P) dan jumlah diminta (Qd) berbanding terbalik.'
+      },
+      {
+        topic: 'Kurva Penawaran',
+        question: 'Mengapa kurva penawaran (Supply Curve) bergerak miring dari kiri bawah ke kanan atas?',
+        options: [
+          'Karena harga dan jumlah yang ditawarkan berbanding lurus',
+          'Karena pembeli menyukai harga yang mahal',
+          'Karena biaya produksi selalu turun',
+          'Karena jumlah barang di alam tidak terbatas'
+        ],
+        correctIndex: 0,
+        explanation: 'Kurva penawaran berslope positif (kiri bawah ke kanan atas) karena hubungan antara harga dan jumlah barang yang ditawarkan berbanding lurus.'
+      },
+      {
+        topic: 'Keseimbangan Pasar',
+        question: 'Harga keseimbangan pasar (equilibrium price) terbentuk pada saat...',
+        options: [
+          'Jumlah permintaan lebih besar dari penawaran',
+          'Jumlah penawaran jauh melebihi permintaan',
+          'Jumlah barang yang diminta sama dengan jumlah barang yang ditawarkan (Qd = Qs)',
+          'Pemerintah melarang transaksi jual beli'
+        ],
+        correctIndex: 2,
+        explanation: 'Harga keseimbangan pasar terjadi ketika kurva permintaan berpotongan dengan kurva penawaran, yaitu saat jumlah permintaan sama dengan jumlah penawaran (Qd = Qs).'
+      },
+      {
+        topic: 'Studi Kasus Permintaan',
+        question: 'Sebuah toko sepatu mengadakan diskon besar-besaran sebesar 50% menjelang tahun ajaran baru sehingga pengunjung membeludak. Faktor utama yang menyebabkan lonjakan jumlah permintaan tersebut adalah...',
+        options: [
+          'Penurunan harga barang itu sendiri',
+          'Kenaikan biaya bahan baku kulit',
+          'Penurunan jumlah penduduk',
+          'Kelangkaan tenaga kerja'
+        ],
+        correctIndex: 0,
+        explanation: 'Sesuai Hukum Permintaan, penurunan harga barang (melalui diskon 50%) menyebabkan kuantitas barang yang diminta konsumen meningkat.'
+      },
+      {
+        topic: 'Pengecualian Hukum Permintaan',
+        question: 'Pada barang mewah berstatus sosial tinggi seperti berlian langka atau lukisan antik (barang Veblen), terkadang semakin mahal harganya justru semakin diburu kolektor. Hal ini terjadi karena...',
+        options: [
+          'Berlian merupakan kebutuhan pokok harian',
+          'Harga mahal dianggap menunjukkan prestise dan gengsi sosial',
+          'Persediaan lukisan antik sangat melimpah',
+          'Tidak ada pembeli di pasar'
+        ],
+        correctIndex: 1,
+        explanation: 'Barang prestise (efek Veblen) merupakan pengecualian hukum permintaan karena nilai gengsi sosialnya justru naik saat harganya tinggi.'
+      },
+      {
+        topic: 'Kelebihan Permintaan',
+        question: 'Apabila harga pasar ditetapkan terlalu rendah di bawah harga keseimbangan, maka yang akan terjadi di pasar adalah...',
+        options: [
+          'Kelebihan penawaran (excess supply) sehingga barang menumpuk',
+          'Kelebihan permintaan (excess demand) sehingga terjadi kelangkaan barang',
+          'Produsen mendapat keuntungan maksimal',
+          'Permintaan menjadi nol'
+        ],
+        correctIndex: 1,
+        explanation: 'Jika harga di bawah titik keseimbangan, banyak konsumen ingin membeli namun produsen enggan menjual, memicu excess demand (kelangkaan).'
+      },
+      {
+        topic: 'Kelebihan Penawaran',
+        question: 'Saat panen raya mangga melimpah ruah sedangkan daya beli masyarakat tetap, harga mangga di pasar cenderung turun. Kondisi awal sebelum harga turun disebut...',
+        options: [
+          'Excess supply (kelebihan penawaran)',
+          'Excess demand (kelebihan permintaan)',
+          'Titik jenuh Gossen',
+          'Inflasi biaya produksi'
+        ],
+        correctIndex: 0,
+        explanation: 'Panen raya meningkatkan jumlah penawaran melebihi jumlah permintaan (excess supply), yang akhirnya mendorong harga turun menuju keseimbangan baru.'
+      },
+      {
+        topic: 'Pergeseran Kurva Permintaan',
+        question: 'Jika pendapatan rata-rata masyarakat meningkat pesat, maka kurva permintaan terhadap barang normal (seperti pakaian dan elektronik) akan...',
+        options: [
+          'Bergeser ke kanan atas',
+          'Bergeser ke kiri bawah',
+          'Tidak mengalami pergeseran sama sekali',
+          'Berubah menjadi garis lurus vertikal'
+        ],
+        correctIndex: 0,
+        explanation: 'Kenaikan pendapatan meningkatkan daya beli pada setiap tingkat harga sehingga kurva permintaan bergeser ke kanan.'
+      },
+      {
+        topic: 'Pergeseran Kurva Penawaran',
+        question: 'Penggunaan mesin teknologi modern di pabrik roti membuat produksi menjadi lebih cepat dan biaya per unit lebih murah. Dampaknya terhadap kurva penawaran roti adalah...',
+        options: [
+          'Kurva penawaran bergeser ke kiri',
+          'Kurva penawaran bergeser ke kanan',
+          'Kurva permintaan bergeser ke kiri',
+          'Harga roti pasti naik dua kali lipat'
+        ],
+        correctIndex: 1,
+        explanation: 'Efisiensi teknologi menurunkan biaya produksi sehingga produsen mampu menawarkan lebih banyak barang pada setiap tingkat harga (kurva penawaran bergeser ke kanan).'
+      },
+      {
+        topic: 'Hukum Gossen I',
+        question: 'Nilai kepuasan tambahan yang diperoleh konsumen ketika menambah satu unit barang yang dikonsumsi disebut...',
+        options: [
+          'Total Utility (Nilai Guna Total)',
+          'Marginal Utility (Nilai Guna Marginal)',
+          'Exchange Value (Nilai Tukar)',
+          'Equilibrium Value (Nilai Keseimbangan)'
+        ],
+        correctIndex: 1,
+        explanation: 'Marginal Utility (nilai guna marginal) adalah tambahan kepuasan dari mengonsumsi satu unit tambahan barang, yang menurut Hukum Gossen I semakin lama semakin menurun.'
+      },
+      {
+        topic: 'Barang Substitusi',
+        question: 'Apabila harga daging ayam naik tajam, banyak ibu rumah tangga beralih membeli ikan atau telur sebagai penggantinya. Dalam ilmu ekonomi, hubungan antara daging ayam dan ikan disebut...',
+        options: [
+          'Barang komplementer (pelengkap)',
+          'Barang substitusi (pengganti)',
+          'Barang bebas',
+          'Barang modal'
+        ],
+        correctIndex: 1,
+        explanation: 'Barang substitusi adalah barang yang dapat saling menggantikan fungsinya; jika harga barang A naik, permintaan barang penggantinya (B) akan naik.'
+      },
+      {
+        topic: 'Barang Komplementer',
+        question: 'Harga bahan bakar bensin mengalami kenaikan signifikan. Menurut analisis permintaan barang komplementer, hal ini berpotensi membuat permintaan kendaraan bermotor berbahan bakar bensin menjadi...',
+        options: [
+          'Menurun',
+          'Meningkat pesat',
+          'Tidak terpengaruh sama sekali',
+          'Berubah menjadi barang bebas'
+        ],
+        correctIndex: 0,
+        explanation: 'Bensin dan motor berbahan bakar bensin adalah barang komplementer (saling melengkapi); jika harga bensin naik, permintaan motor cenderung menurun.'
+      },
+      {
+        topic: 'Jenis Permintaan',
+        question: 'Dina ingin sekali membeli laptop baru untuk belajar desain, dan ia sudah memiliki uang tabungan yang cukup untuk membelinya hari ini. Permintaan Dina tergolong sebagai...',
+        options: [
+          'Permintaan absolut',
+          'Permintaan potensial',
+          'Permintaan efektif',
+          'Permintaan kolektif'
+        ],
+        correctIndex: 2,
+        explanation: 'Permintaan efektif adalah permintaan terhadap suatu barang atau jasa yang disertai dengan kemampuan membayar (daya beli).'
+      },
+      {
+        topic: 'Permintaan Absolut',
+        question: 'Budi berkeinginan membeli sebuah mobil sport mewah, namun ia belum memiliki uang yang cukup untuk membelinya. Dalam ekonomi, keinginan Budi dikategorikan sebagai...',
+        options: [
+          'Permintaan efektif',
+          'Permintaan absolut',
+          'Penawaran individu',
+          'Harga subjektif'
+        ],
+        correctIndex: 1,
+        explanation: 'Permintaan absolut adalah keinginan memiliki barang/jasa yang tidak didukung oleh kemampuan daya beli (uang).'
+      },
+      {
+        topic: 'Studi Kasus Keseimbangan',
+        question: 'Pada harga Rp10.000/kg, jumlah jeruk yang diminta 50 kg dan ditawarkan 30 kg. Pada harga Rp12.000/kg, jumlah jeruk yang diminta 40 kg dan ditawarkan 40 kg. Berapakah harga keseimbangan pasar jeruk tersebut?',
+        options: [
+          'Rp10.000/kg',
+          'Rp11.000/kg',
+          'Rp12.000/kg',
+          'Rp22.000/kg'
+        ],
+        correctIndex: 2,
+        explanation: 'Harga keseimbangan tercapai saat Qd = Qs. Pada harga Rp12.000/kg, jumlah diminta (40 kg) tepat sama dengan jumlah ditawarkan (40 kg).'
+      },
+      {
+        topic: 'Hukum Penawaran',
+        question: 'Faktor berikut ini yang BUKAN merupakan faktor yang memengaruhi penawaran suatu barang adalah...',
+        options: [
+          'Biaya produksi dan harga bahan baku',
+          'Kemajuan teknologi produksi',
+          'Selera dan tren gaya hidup konsumen',
+          'Pajak dan subsidi dari pemerintah'
+        ],
+        correctIndex: 2,
+        explanation: 'Selera konsumen merupakan faktor yang memengaruhi permintaan (demand), bukan penawaran (supply).'
+      },
+      {
+        topic: 'Hukum Engel',
+        question: 'Keluarga Pak Anton dulunya berpenghasilan Rp3 juta/bulan dan menghabiskan 65% pendapatannya untuk makanan. Setelah naik jabatan menjadi Rp12 juta/bulan, persentase belanja makanannya turun menjadi 30%, sementara porsi untuk pendidikan dan rekreasi naik. Hal ini membuktikan kebenaran...',
+        options: [
+          'Hukum Gossen I',
+          'Hukum Engel',
+          'Hukum Penawaran',
+          'Hukum Kelangkaan'
+        ],
+        correctIndex: 1,
+        explanation: 'Sesuai Hukum Engel, kenaikan pendapatan menurunkan persentase pengeluaran kebutuhan pokok (pangan) dan meningkatkan porsi kebutuhan sekunder/tersier.'
+      },
+      {
+        topic: 'Mekanisme Pasar',
+        question: 'Di pasar tradisional terjadi proses tawar-menawar antara pembeli yang menginginkan harga murah dan penjual yang menginginkan harga tinggi hingga akhirnya sepakat pada satu harga. Proses ini berfungsi membentuk...',
+        options: [
+          'Harga monopoli',
+          'Harga keseimbangan pasar',
+          'Inflasi permanen',
+          'Pajak pertambahan nilai'
+        ],
+        correctIndex: 1,
+        explanation: 'Tawar-menawar mempertemukan kekuatan permintaan dan penawaran sehingga terbentuk harga kesepakatan (harga keseimbangan).'
+      },
+      {
+        topic: 'Hukum Gossen I',
+        question: 'Titik di mana konsumsi suatu barang mencapai kepuasan total tertinggi dan nilai guna marginal (tambahan kepuasan) bernilai nol disebut...',
+        options: [
+          'Titik keseimbangan pasar',
+          'Titik jenuh (saturation point)',
+          'Titik impas (break-even point)',
+          'Titik inflasi'
+        ],
+        correctIndex: 1,
+        explanation: 'Pada titik jenuh (Hukum Gossen I), tambahan kepuasan (marginal utility) bernilai nol; jika konsumsi terus ditambah setelah titik ini, kepuasan justru menjadi negatif.'
+      },
+      {
+        topic: 'Subsidi & Penawaran',
+        question: 'Pemerintah memberikan subsidi pupuk kepada petani padi. Kebijakan subsidi ini akan meringankan biaya produksi petani sehingga kurva penawaran beras akan...',
+        options: [
+          'Bergeser ke kanan (penawaran meningkat)',
+          'Bergeser ke kiri (penawaran menurun)',
+          'Menghilang dari pasar',
+          'Menyebabkan harga beras melambung tinggi'
+        ],
+        correctIndex: 0,
+        explanation: 'Subsidi menurunkan biaya produksi sehingga produsen mampu meningkatkan jumlah barang yang ditawarkan (kurva penawaran bergeser ke kanan).'
+      },
+      {
+        topic: 'Hukum Ekonomi',
+        question: 'Hubungan sebab-akibat atau keterkaitan antara peristiwa-peristiwa ekonomi yang saling berhubungan dan berlaku secara umum disebut...',
+        options: [
+          'Motif ekonomi',
+          'Tindakan ekonomi',
+          'Hukum ekonomi',
+          'Politik ekonomi'
+        ],
+        correctIndex: 2,
+        explanation: 'Hukum ekonomi adalah hubungan kausal (sebab-akibat) antara gejala-gejala ekonomi yang saling berkaitan, seperti hubungan antara harga dan permintaan.'
+      },
+      {
+        topic: 'Studi Kasus Penawaran',
+        question: 'Menjelang Hari Raya Idulfitri, harga kue kering di toko meningkat karena banyaknya pesanan, sehingga produsen kue menambah jam kerja lembur untuk memproduksi lebih banyak kue. Perilaku produsen tersebut mencerminkan...',
+        options: [
+          'Hukum Penawaran',
+          'Hukum Gossen II',
+          'Hukum Engel',
+          'Permintaan Absolut'
+        ],
+        correctIndex: 0,
+        explanation: 'Kenaikan harga jual mendorong produsen menambah jumlah barang yang ditawarkan ke pasar sesuai dengan Hukum Penawaran.'
+      }
+    ];
+
+    /* ===========================================================
+       3. KONFIGURASI PAPAN 5x5 ZIG-ZAG, TANGGA & ULAR
+       =========================================================== */
+    const BOARD_SIZE = 5;
+    const TOTAL_TILES = 25;
+
+    // Rute Tangga (Naik / Peluang Untung)
+    const LADDERS = {
+      3: 11,
+      6: 15,
+      12: 22
+    };
+
+    // Rute Ular (Turun / Risiko Rugi)
+    const SNAKES = {
+      14: 4,
+      19: 9,
+      24: 16
+    };
+
+    const LEADERBOARD_KEY = 'juragan_ekonomi_leaderboard_v1';
+
+    /* ===========================================================
+       4. STATE PERMAINAN
+       =========================================================== */
+    let gameState = {
+      team: '',
+      players: [
+        { id: 0, name: 'Pemain 1', color: 'red', pos: 1, rolls: 0, correct: 0, score: 0 },
+        { id: 1, name: 'Pemain 2', color: 'blue', pos: 1, rolls: 0, correct: 0, score: 0 }
+      ],
+      currentPlayerIndex: 0,
+      isBusy: false, // Mencegah klik ganda saat animasi dadu/langkah/kuis
+      usedQuestionIndices: [],
+      pendingQuizContext: null // Menyimpan detail aksi setelah kuis dijawab
+    };
+
+    /* ===========================================================
+       5. UTILITAS UI: TOAST & MODAL KONFIRMASI
+       =========================================================== */
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const colors = {
+        info: 'bg-indigo-600 text-white border-indigo-800',
+        success: 'bg-emerald-600 text-white border-emerald-800',
+        warning: 'bg-amber-500 text-amber-950 border-amber-700',
+        error: 'bg-rose-600 text-white border-rose-800'
+      };
+      toast.className = `px-4 py-3 rounded-2xl border-b-4 shadow-xl font-bold text-sm text-center animate-pop ${colors[type] || colors.info}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        toast.style.transition = 'all 0.25s ease';
+        setTimeout(() => toast.remove(), 260);
+      }, 2600);
+    }
+
+    function showConfirmModal(title, message, onConfirm) {
+      const modal = document.getElementById('modal-confirm');
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-message').textContent = message;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      const btnOk = document.getElementById('confirm-ok');
+      const btnCancel = document.getElementById('confirm-cancel');
+
+      const cleanup = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      };
+
+      btnCancel.onclick = cleanup;
+      btnOk.onclick = () => {
+        cleanup();
+        onConfirm();
+      };
+    }
+
+    function toggleRulesModal(show) {
+      const modal = document.getElementById('modal-rules');
+      if (show) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      } else {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    /* ===========================================================
+       6. NAVIGASI ANTAR HALAMAN (START, GAME, GAMEOVER, LEADERBOARD)
+       =========================================================== */
+    function showScreen(screenName) {
+      const screens = ['start', 'game', 'gameover', 'leaderboard'];
+      screens.forEach(s => {
+        const el = document.getElementById(`screen-${s}`);
+        if (s === screenName) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+
+      if (screenName === 'game') {
+        setTimeout(() => {
+          drawSnakesAndLaddersSVG();
+          updatePawnsPosition();
+        }, 50);
+      } else if (screenName === 'leaderboard') {
+        renderLeaderboard();
+      }
+    }
+
+    function confirmExitGame() {
+      showConfirmModal(
+        'Keluar ke Menu Utama?',
+        'Progres permainan saat ini akan dihentikan. Yakin ingin kembali ke halaman awal?',
+        () => showScreen('start')
+      );
+    }
+
+    /* ===========================================================
+       7. PEMBUATAN PAPAN 5x5 ZIG-ZAG & SVG ULAR TANGGA
+       =========================================================== */
+    // Mengubah nomor kotak (1..25) menjadi koordinat baris (0=atas..4=bawah) & kolom (0=kiri..4=kanan)
+    function getTileRowCol(tileNum) {
+      const zeroIdx = tileNum - 1;
+      const rowFromBottom = Math.floor(zeroIdx / BOARD_SIZE); // 0..4
+      const row = (BOARD_SIZE - 1) - rowFromBottom; // 4..0
+      let col = zeroIdx % BOARD_SIZE;
+      // Baris ganjil dari bawah (rowFromBottom = 1, 3) bergerak dari kanan ke kiri (zig-zag)
+      if (rowFromBottom % 2 === 1) {
+        col = (BOARD_SIZE - 1) - col;
+      }
+      return { row, col };
+    }
+
+    function buildBoardGrid() {
+      const grid = document.getElementById('board-grid');
+      grid.innerHTML = '';
+
+      // Buat matriks 5x5 agar mudah dirender dari baris atas (0) ke bawah (4)
+      const matrix = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
+      for (let num = 1; num <= TOTAL_TILES; num++) {
+        const { row, col } = getTileRowCol(num);
+        matrix[row][col] = num;
+      }
+
+      const tileColors = [
+        'bg-amber-50',
+        'bg-orange-100/80',
+        'bg-yellow-100/80',
+        'bg-emerald-50',
+        'bg-sky-50'
+      ];
+
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          const num = matrix[r][c];
+          const isLadder = LADDERS[num] !== undefined;
+          const isSnake = SNAKES[num] !== undefined;
+          const isStart = num === 1;
+          const isFinish = num === 25;
+
+          const cell = document.createElement('div');
+          cell.id = `tile-${num}`;
+
+          let bgClass = tileColors[(r + c) % tileColors.length];
+          if (isStart) bgClass = 'bg-indigo-200';
+          if (isFinish) bgClass = 'bg-gradient-to-br from-amber-300 to-yellow-400';
+          if (isLadder) bgClass = 'bg-emerald-100';
+          if (isSnake) bgClass = 'bg-rose-100';
+
+          cell.className = `relative border border-amber-400/70 flex flex-col justify-between p-1 sm:p-1.5 select-none ${bgClass}`;
+
+          // Nomor kotak & ikon spesial
+          let badgeHTML = `<span class="text-xs sm:text-sm font-extrabold text-slate-700 leading-none">${num}</span>`;
+          let centerIcon = '';
+
+          if (isStart) {
+            badgeHTML = `<span class="text-[10px] sm:text-xs font-extrabold text-indigo-800 bg-white/80 px-1 rounded">1 START</span>`;
+            centerIcon = `<span class="text-base sm:text-xl opacity-80 self-center">🚀</span>`;
+          } else if (isFinish) {
+            badgeHTML = `<span class="text-[10px] sm:text-xs font-extrabold text-amber-950 bg-white/80 px-1 rounded">25 GOL!</span>`;
+            centerIcon = `<span class="text-lg sm:text-2xl self-center">🏆</span>`;
+          } else if (isLadder) {
+            badgeHTML = `
+              <div class="flex items-center justify-between w-full">
+                <span class="text-xs sm:text-sm font-extrabold text-emerald-800">${num}</span>
+                <span class="text-[10px] sm:text-xs font-bold bg-emerald-500 text-white px-1 rounded-md">⭐📈</span>
+              </div>`;
+          } else if (isSnake) {
+            badgeHTML = `
+              <div class="flex items-center justify-between w-full">
+                <span class="text-xs sm:text-sm font-extrabold text-rose-800">${num}</span>
+                <span class="text-[10px] sm:text-xs font-bold bg-rose-500 text-white px-1 rounded-md">⭐📉</span>
+              </div>`;
+          }
+
+          cell.innerHTML = `${badgeHTML}${centerIcon}<div class="h-2"></div>`;
+          grid.appendChild(cell);
+        }
+      }
+
+      createPawns();
+      drawSnakesAndLaddersSVG();
+      updatePawnsPosition();
+    }
+
+    // Menggambar SVG Tangga (Hijau/Emas) & Ular (Merah/Ungu) secara presisi di atas papan
+    function drawSnakesAndLaddersSVG() {
+      const svg = document.getElementById('board-svg');
+      const wrapper = document.getElementById('board-wrapper');
+      if (!svg || !wrapper) return;
+
+      const width = wrapper.clientWidth;
+      const height = wrapper.clientHeight;
+      if (width === 0 || height === 0) return;
+
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.innerHTML = '';
+
+      const getTileCenter = (tileNum) => {
+        const { row, col } = getTileRowCol(tileNum);
+        const cellW = width / BOARD_SIZE;
+        const cellH = height / BOARD_SIZE;
+        return {
+          x: (col + 0.5) * cellW,
+          y: (row + 0.5) * cellH
+        };
+      };
+
+      // 1. Gambar Semua Tangga (Ladders)
+      Object.entries(LADDERS).forEach(([startStr, endNum]) => {
+        const p1 = getTileCenter(Number(startStr));
+        const p2 = getTileCenter(Number(endNum));
+
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const len = Math.hypot(dx, dy);
+        const nx = (-dy / len) * 9; // Lebar setengah tangga
+        const ny = (dx / len) * 9;
+
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('opacity', '0.88');
+
+        // Dua tiang tangga samping
+        const rail1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        rail1.setAttribute('x1', p1.x + nx);
+        rail1.setAttribute('y1', p1.y + ny);
+        rail1.setAttribute('x2', p2.x + nx);
+        rail1.setAttribute('y2', p2.y + ny);
+        rail1.setAttribute('stroke', '#059669');
+        rail1.setAttribute('stroke-width', '4.5');
+        rail1.setAttribute('stroke-linecap', 'round');
+
+        const rail2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        rail2.setAttribute('x1', p1.x - nx);
+        rail2.setAttribute('y1', p1.y - ny);
+        rail2.setAttribute('x2', p2.x - nx);
+        rail2.setAttribute('y2', p2.y - ny);
+        rail2.setAttribute('stroke', '#059669');
+        rail2.setAttribute('stroke-width', '4.5');
+        rail2.setAttribute('stroke-linecap', 'round');
+
+        g.appendChild(rail1);
+        g.appendChild(rail2);
+
+        // Anak tangga (rungs)
+        const steps = Math.max(4, Math.floor(len / 18));
+        for (let i = 1; i < steps; i++) {
+          const t = i / steps;
+          const rx = p1.x + dx * t;
+          const ry = p1.y + dy * t;
+          const rung = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          rung.setAttribute('x1', rx + nx);
+          rung.setAttribute('y1', ry + ny);
+          rung.setAttribute('x2', rx - nx);
+          rung.setAttribute('y2', ry - ny);
+          rung.setAttribute('stroke', '#FBBF24');
+          rung.setAttribute('stroke-width', '3.5');
+          rung.setAttribute('stroke-linecap', 'round');
+          g.appendChild(rung);
+        }
+
+        svg.appendChild(g);
+      });
+
+      // 2. Gambar Semua Ular (Snakes) berkelok
+      Object.entries(SNAKES).forEach(([headStr, tailNum]) => {
+        const p1 = getTileCenter(Number(headStr)); // Kepala ular
+        const p2 = getTileCenter(Number(tailNum)); // Ekor ular
+
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const perpX = -dy * 0.25;
+        const perpY = dx * 0.25;
+
+        const ctrl1X = (p1.x + midX) / 2 + perpX;
+        const ctrl1Y = (p1.y + midY) / 2 + perpY;
+        const ctrl2X = (midX + p2.x) / 2 - perpX;
+        const ctrl2Y = (midY + p2.y) / 2 - perpY;
+
+        const pathData = `M ${p1.x} ${p1.y} Q ${ctrl1X} ${ctrl1Y}, ${midX} ${midY} T ${p2.x} ${p2.y}`;
+
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('opacity', '0.88');
+
+        // Badan ular luar
+        const bodyOuter = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        bodyOuter.setAttribute('d', pathData);
+        bodyOuter.setAttribute('fill', 'none');
+        bodyOuter.setAttribute('stroke', '#E11D48');
+        bodyOuter.setAttribute('stroke-width', '9');
+        bodyOuter.setAttribute('stroke-linecap', 'round');
+
+        // Corak garis dalam ular
+        const bodyInner = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        bodyInner.setAttribute('d', pathData);
+        bodyInner.setAttribute('fill', 'none');
+        bodyInner.setAttribute('stroke', '#FDA4AF');
+        bodyInner.setAttribute('stroke-width', '3.5');
+        bodyInner.setAttribute('stroke-dasharray', '6 6');
+        bodyInner.setAttribute('stroke-linecap', 'round');
+
+        // Kepala ular
+        const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        head.setAttribute('cx', p1.x);
+        head.setAttribute('cy', p1.y);
+        head.setAttribute('r', '9');
+        head.setAttribute('fill', '#BE123C');
+
+        // Mata ular
+        const eyeL = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        eyeL.setAttribute('cx', p1.x - 3);
+        eyeL.setAttribute('cy', p1.y - 2);
+        eyeL.setAttribute('r', '2');
+        eyeL.setAttribute('fill', '#FFF');
+
+        const eyeR = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        eyeR.setAttribute('cx', p1.x + 3);
+        eyeR.setAttribute('cy', p1.y - 2);
+        eyeR.setAttribute('r', '2');
+        eyeR.setAttribute('fill', '#FFF');
+
+        g.appendChild(bodyOuter);
+        g.appendChild(bodyInner);
+        g.appendChild(head);
+        g.appendChild(eyeL);
+        g.appendChild(eyeR);
+        svg.appendChild(g);
+      });
+    }
+
+    // Membuat Elemen Pion Pemain 1 & 2
+    function createPawns() {
+      const layer = document.getElementById('pawn-layer');
+      layer.innerHTML = `
+        <div id="pawn-0" class="pawn-piece absolute w-8 h-8 sm:w-10 sm:h-10 -ml-4 -mt-4 sm:-ml-5 sm:-mt-5 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 border-3 border-white flex items-center justify-center text-white font-extrabold text-xs sm:text-sm shadow-lg">
+          P1
+        </div>
+        <div id="pawn-1" class="pawn-piece absolute w-8 h-8 sm:w-10 sm:h-10 -ml-4 -mt-4 sm:-ml-5 sm:-mt-5 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 border-3 border-white flex items-center justify-center text-white font-extrabold text-xs sm:text-sm shadow-lg">
+          P2
+        </div>
+      `;
+    }
+
+    // Memperbarui Posisi Pion Real-time di Atas Papan
+    function updatePawnsPosition() {
+      const wrapper = document.getElementById('board-wrapper');
+      if (!wrapper) return;
+      const w = wrapper.clientWidth;
+      const h = wrapper.clientHeight;
+      if (w === 0 || h === 0) return;
+
+      const sameTile = gameState.players[0].pos === gameState.players[1].pos;
+
+      gameState.players.forEach((player, idx) => {
+        const pawnEl = document.getElementById(`pawn-${idx}`);
+        if (!pawnEl) return;
+
+        const { row, col } = getTileRowCol(player.pos);
+        const cellW = w / BOARD_SIZE;
+        const cellH = h / BOARD_SIZE;
+
+        // Jika dua pion berada di kotak yang sama, geser sedikit agar tidak saling menutupi
+        const offsetX = sameTile ? (idx === 0 ? -9 : 9) : 0;
+        const offsetY = sameTile ? (idx === 0 ? -4 : 4) : 0;
+
+        const targetX = (col + 0.5) * cellW + offsetX;
+        const targetY = (row + 0.55) * cellH + offsetY;
+
+        pawnEl.style.transform = `translate(${targetX}px, ${targetY}px)`;
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      if (!document.getElementById('screen-game').classList.contains('hidden')) {
+        drawSnakesAndLaddersSVG();
+        updatePawnsPosition();
+      }
+    });
+
+    /* ===========================================================
+       8. VISUAL DADU & MEKANIKA LEMPAR DADU
+       =========================================================== */
+    function renderDiceFace(value) {
+      const face = document.getElementById('dice-face');
+      // Pola titik dadu 3x3 (indeks 0..8)
+      const pipMap = {
+        1: [4],
+        2: [2, 6],
+        3: [2, 4, 6],
+        4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8],
+        6: [0, 2, 3, 5, 6, 8]
+      };
+      const activePips = pipMap[value] || [4];
+      const dotColor = value === 6 ? 'bg-rose-500' : 'bg-slate-800';
+
+      face.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'flex items-center justify-center';
+        if (activePips.includes(i)) {
+          cell.innerHTML = `<span class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full ${dotColor} shadow-inner"></span>`;
+        }
+        face.appendChild(cell);
+      }
+    }
+
+    // Inisialisasi permainan baru dari Form Start Screen
+    document.getElementById('start-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const p1Name = document.getElementById('input-p1').value.trim();
+      const p2Name = document.getElementById('input-p2').value.trim();
+      const teamName = document.getElementById('input-team').value.trim();
+
+      if (!p1Name || !p2Name || !teamName) {
+        showToast('Mohon lengkapi nama Pemain 1, Pemain 2, dan Kelas/Sekolah!', 'warning');
+        return;
+      }
+
+      SoundFX.init();
+      startNewMatch(p1Name, p2Name, teamName);
+    });
+
+    function startNewMatch(p1Name, p2Name, teamName) {
+      gameState = {
+        team: teamName,
+        players: [
+          { id: 0, name: p1Name, color: 'red', pos: 1, rolls: 0, correct: 0, score: 0 },
+          { id: 1, name: p2Name, color: 'blue', pos: 1, rolls: 0, correct: 0, score: 0 }
+        ],
+        currentPlayerIndex: 0,
+        isBusy: false,
+        usedQuestionIndices: [],
+        pendingQuizContext: null
+      };
+
+      document.getElementById('hud-team').textContent = teamName;
+      document.getElementById('p1-name-display').textContent = p1Name;
+      document.getElementById('p2-name-display').textContent = p2Name;
+
+      renderDiceFace(6);
+      buildBoardGrid();
+      updateHUD();
+      setLog(`Permainan dimulai! Giliran ${p1Name} (Merah) untuk mengocok dadu pertama.`);
+      showScreen('game');
+    }
+
+    function restartSamePlayers() {
+      startNewMatch(
+        gameState.players[0].name,
+        gameState.players[1].name,
+        gameState.team
+      );
+    }
+
+    function setLog(text) {
+      document.getElementById('game-log').textContent = text;
+    }
+
+    function updateHUD() {
+      const p1 = gameState.players[0];
+      const p2 = gameState.players[1];
+      const active = gameState.players[gameState.currentPlayerIndex];
+
+      // Update statistik masing-masing kartu pemain
+      document.getElementById('p1-tile-badge').textContent = `Kotak ${p1.pos}/25`;
+      document.getElementById('p1-rolls').textContent = p1.rolls;
+      document.getElementById('p1-correct').textContent = p1.correct;
+      document.getElementById('p1-score').textContent = p1.score;
+
+      document.getElementById('p2-tile-badge').textContent = `Kotak ${p2.pos}/25`;
+      document.getElementById('p2-rolls').textContent = p2.rolls;
+      document.getElementById('p2-correct').textContent = p2.correct;
+      document.getElementById('p2-score').textContent = p2.score;
+
+      // Sorot kartu pemain yang sedang mendapat giliran
+      const cardP1 = document.getElementById('card-p1');
+      const cardP2 = document.getElementById('card-p2');
+      const turnBanner = document.getElementById('turn-banner');
+      const turnAvatar = document.getElementById('turn-avatar');
+      const turnName = document.getElementById('turn-player-name');
+      const turnBadge = document.getElementById('turn-badge');
+
+      if (active.id === 0) {
+        cardP1.className = 'bg-white rounded-2xl p-3.5 border-4 border-rose-500 shadow-md scale-[1.02] transition-all';
+        cardP2.className = 'bg-white rounded-2xl p-3.5 border-4 border-slate-200 shadow-sm opacity-75 transition-all';
+
+        turnBanner.className = 'rounded-2xl p-3.5 border-4 transition-all duration-300 shadow-md flex items-center justify-between bg-rose-50 border-rose-400';
+        turnAvatar.className = 'w-11 h-11 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-xl font-bold shadow';
+        turnAvatar.textContent = '🔴';
+        turnName.className = 'text-lg sm:text-xl font-extrabold text-rose-700 leading-tight';
+        turnBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow-sm animate-pulse';
+      } else {
+        cardP2.className = 'bg-white rounded-2xl p-3.5 border-4 border-sky-500 shadow-md scale-[1.02] transition-all';
+        cardP1.className = 'bg-white rounded-2xl p-3.5 border-4 border-slate-200 shadow-sm opacity-75 transition-all';
+
+        turnBanner.className = 'rounded-2xl p-3.5 border-4 transition-all duration-300 shadow-md flex items-center justify-between bg-sky-50 border-sky-400';
+        turnAvatar.className = 'w-11 h-11 rounded-2xl bg-sky-500 text-white flex items-center justify-center text-xl font-bold shadow';
+        turnAvatar.textContent = '🔵';
+        turnName.className = 'text-lg sm:text-xl font-extrabold text-sky-700 leading-tight';
+        turnBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-sky-500 text-white shadow-sm animate-pulse';
+      }
+
+      turnName.textContent = active.name;
+      turnBadge.textContent = gameState.isBusy ? 'Sedang Jalan...' : 'Siap Kocok!';
+      document.getElementById('btn-roll').disabled = gameState.isBusy;
+    }
+
+    function handleRollDice() {
+      if (gameState.isBusy) return;
+      gameState.isBusy = true;
+      updateHUD();
+
+      const activePlayer = gameState.players[gameState.currentPlayerIndex];
+      activePlayer.rolls += 1;
+      updateHUD();
+
+      const diceBox = document.getElementById('dice-box');
+      const statusText = document.getElementById('dice-status-text');
+      diceBox.classList.add('dice-rolling');
+      statusText.textContent = `${activePlayer.name} sedang mengocok dadu...`;
+      SoundFX.roll();
+
+      // Animasi acak angka dadu sebelum berhenti
+      let ticks = 0;
+      const rollInterval = setInterval(() => {
+        renderDiceFace(Math.floor(Math.random() * 6) + 1);
+        ticks++;
+        if (ticks >= 8) {
+          clearInterval(rollInterval);
+          diceBox.classList.remove('dice-rolling');
+
+          const finalRoll = Math.floor(Math.random() * 6) + 1;
+          renderDiceFace(finalRoll);
+          statusText.textContent = `Dadu berhenti di angka ${finalRoll}! Melangkah ${finalRoll} petak...`;
+          setLog(`🎲 ${activePlayer.name} melempar dadu angka ${finalRoll}.`);
+
+          movePlayerStepByStep(activePlayer, finalRoll);
+        }
+      }, 75);
+    }
+
+    function movePlayerStepByStep(player, steps) {
+      let remaining = steps;
+
+      const stepInterval = setInterval(() => {
+        if (remaining > 0 && player.pos < TOTAL_TILES) {
+          player.pos += 1;
+          remaining -= 1;
+          SoundFX.step();
+          updatePawnsPosition();
+          updateHUD();
+        } else {
+          clearInterval(stepInterval);
+          evaluateLandingTile(player);
+        }
+      }, 270);
+    }
+
+    function evaluateLandingTile(player) {
+      // Cek apakah pemain sudah mencapai Kotak 25 (Finish)
+      if (player.pos >= TOTAL_TILES) {
+        player.pos = TOTAL_TILES;
+        player.score += 500; // Bonus kemenangan mencapai puncak
+        updatePawnsPosition();
+        updateHUD();
+        setTimeout(() => triggerGameOver(player), 450);
+        return;
+      }
+
+      // Cek apakah mendarat di Tangga Untung, Ular Rugi, atau Kotak Biasa
+      if (LADDERS[player.pos] !== undefined) {
+        const dest = LADDERS[player.pos];
+        openQuizModal(player, 'ladder', player.pos, dest);
+      } else if (SNAKES[player.pos] !== undefined) {
+        const dest = SNAKES[player.pos];
+        openQuizModal(player, 'snake', player.pos, dest);
+      } else {
+        openQuizModal(player, 'normal', player.pos, player.pos);
+      }
+    }
+
+    /* ===========================================================
+       9. SISTEM KUIS INTERAKTIF HUKUM EKONOMI (MODAL)
+       =========================================================== */
+    function getNextQuestion() {
+      if (gameState.usedQuestionIndices.length >= QUESTION_BANK.length) {
+        gameState.usedQuestionIndices = []; // Reset rotasi jika semua 28 soal sudah terpakai
+      }
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * QUESTION_BANK.length);
+      } while (gameState.usedQuestionIndices.includes(idx));
+
+      gameState.usedQuestionIndices.push(idx);
+      return QUESTION_BANK[idx];
+    }
+
+    function openQuizModal(player, type, currentTile, targetTile) {
+      const qData = getNextQuestion();
+      gameState.pendingQuizContext = {
+        player,
+        type,
+        currentTile,
+        targetTile,
+        questionData: qData,
+        answeredCorrectly: false
+      };
+
+      const modal = document.getElementById('modal-quiz');
+      const contextBadge = document.getElementById('quiz-context-badge');
+      const topicBadge = document.getElementById('quiz-topic-badge');
+      const eventDesc = document.getElementById('quiz-event-desc');
+      const questionEl = document.getElementById('quiz-question');
+      const optionsContainer = document.getElementById('quiz-options');
+      const feedbackBox = document.getElementById('quiz-feedback');
+
+      feedbackBox.classList.add('hidden');
+      topicBadge.textContent = `📚 ${qData.topic}`;
+      questionEl.textContent = qData.question;
+
+      // Sesuaikan tampilan badge & deskripsi tantangan berdasarkan jenis kotak
+      if (type === 'ladder') {
+        contextBadge.className = 'px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-400';
+        contextBadge.textContent = `⭐ TANGGA UNTUNG: Kotak ${currentTile} ➔ ${targetTile}`;
+        eventDesc.className = 'p-3 rounded-2xl bg-emerald-50 border-2 border-emerald-200 text-xs sm:text-sm font-semibold text-emerald-900 mb-4';
+        eventDesc.textContent = `🚀 Peluang Emas ${player.name}! Jawab benar untuk naik tangga menuju Kotak ${targetTile} (+250 Poin)!`;
+      } else if (type === 'snake') {
+        contextBadge.className = 'px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold bg-rose-100 text-rose-800 border border-rose-400';
+        contextBadge.textContent = `⭐ ULAR RUGI: Kotak ${currentTile} ➔ ${targetTile}`;
+        eventDesc.className = 'p-3 rounded-2xl bg-rose-50 border-2 border-rose-200 text-xs sm:text-sm font-semibold text-rose-900 mb-4';
+        eventDesc.textContent = `⚠️ Awas Risiko Rugi ${player.name}! Jawab benar untuk bertahan di Kotak ${currentTile}. Jika salah, merosot turun ke Kotak ${targetTile}!`;
+      } else {
+        contextBadge.className = 'px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-300';
+        contextBadge.textContent = `💡 KUIS JURAGAN: Kotak ${currentTile}`;
+        eventDesc.className = 'p-3 rounded-2xl bg-indigo-50 border-2 border-indigo-200 text-xs sm:text-sm font-semibold text-indigo-900 mb-4';
+        eventDesc.textContent = `🧠 Tantangan Pengetahuan ${player.name}! Jawab benar untuk mengamankan posisi (+100 Poin). Jika salah, mundur 1 kotak!`;
+      }
+
+      // Render 4 pilihan jawaban (A, B, C, D)
+      const letters = ['A', 'B', 'C', 'D'];
+      optionsContainer.innerHTML = '';
+      qData.options.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-3d w-full text-left p-3 sm:p-3.5 rounded-2xl bg-slate-50 hover:bg-indigo-50 border-2 border-b-4 border-slate-300 hover:border-indigo-400 font-semibold text-sm sm:text-base text-slate-800 flex items-start gap-3 transition-all';
+        btn.innerHTML = `
+          <span class="w-7 h-7 rounded-xl bg-indigo-100 text-indigo-700 font-extrabold text-sm flex items-center justify-center shrink-0 mt-0.5">${letters[idx]}</span>
+          <span class="flex-1">${optText}</span>
+        `;
+        btn.onclick = () => handleQuizAnswer(idx);
+        optionsContainer.appendChild(btn);
+      });
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function handleQuizAnswer(selectedIndex) {
+      const ctx = gameState.pendingQuizContext;
+      if (!ctx) return;
+
+      const isCorrect = selectedIndex === ctx.questionData.correctIndex;
+      ctx.answeredCorrectly = isCorrect;
+
+      // Kunci semua tombol pilihan dan sorot jawaban benar vs salah
+      const optionButtons = document.getElementById('quiz-options').querySelectorAll('button');
+      optionButtons.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === ctx.questionData.correctIndex) {
+          btn.className = 'w-full text-left p-3 sm:p-3.5 rounded-2xl bg-emerald-100 border-2 border-b-4 border-emerald-500 font-bold text-sm sm:text-base text-emerald-950 flex items-start gap-3';
+        } else if (idx === selectedIndex && !isCorrect) {
+          btn.className = 'w-full text-left p-3 sm:p-3.5 rounded-2xl bg-rose-100 border-2 border-b-4 border-rose-500 font-bold text-sm sm:text-base text-rose-950 flex items-start gap-3';
+        } else {
+          btn.className = 'w-full text-left p-3 sm:p-3.5 rounded-2xl bg-slate-100 border-2 border-slate-200 opacity-50 font-medium text-sm sm:text-base text-slate-500 flex items-start gap-3';
+        }
+      });
+
+      const feedbackBox = document.getElementById('quiz-feedback');
+      const feedbackIcon = document.getElementById('quiz-feedback-icon');
+      const feedbackTitle = document.getElementById('quiz-feedback-title');
+      const explanationEl = document.getElementById('quiz-explanation');
+
+      explanationEl.textContent = ctx.questionData.explanation;
+      feedbackBox.classList.remove('hidden');
+
+      if (isCorrect) {
+        SoundFX.correct();
+        ctx.player.correct += 1;
+        feedbackBox.className = 'mt-4 p-4 rounded-2xl border-2 bg-emerald-50 border-emerald-400 text-emerald-950 animate-pop';
+        feedbackIcon.textContent = '🎉';
+        feedbackTitle.textContent = 'Tepat Sekali! Jawaban Benar!';
+      } else {
+        SoundFX.wrong();
+        feedbackBox.className = 'mt-4 p-4 rounded-2xl border-2 bg-rose-50 border-rose-400 text-rose-950 animate-pop';
+        feedbackIcon.textContent = '❌';
+        feedbackTitle.textContent = 'Kurang Tepat! Perhatikan Pembahasannya:';
+      }
+    }
+
+    function finishQuizTurn() {
+      const ctx = gameState.pendingQuizContext;
+      const modal = document.getElementById('modal-quiz');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+
+      if (!ctx) return;
+      const { player, type, currentTile, targetTile, answeredCorrectly } = ctx;
+
+      if (type === 'ladder') {
+        if (answeredCorrectly) {
+          player.pos = targetTile;
+          player.score += 250;
+          SoundFX.ladder();
+          updatePawnsPosition();
+          setLog(`🪜 Hebat! ${player.name} menjawab benar & naik tangga untung ke Kotak ${targetTile} (+250 Poin)!`);
+          showToast(`Naik Tangga Untung ke Kotak ${targetTile}! 📈`, 'success');
+        } else {
+          setLog(`😅 ${player.name} salah menjawab sehingga gagal naik tangga di Kotak ${currentTile}.`);
+          showToast('Gagal naik tangga! Tetap bertahan.', 'warning');
+        }
+      } else if (type === 'snake') {
+        if (answeredCorrectly) {
+          player.score += 150;
+          setLog(`🛡️ Keren! ${player.name} menjawab benar dan berhasil menangkal Ular Rugi di Kotak ${currentTile} (+150 Poin)!`);
+          showToast('Berhasil menangkal Ular Rugi! 🛡️', 'success');
+        } else {
+          player.pos = targetTile;
+          SoundFX.snake();
+          updatePawnsPosition();
+          setLog(`🐍 Aduh! ${player.name} salah menjawab dan meluncur turun mengikuti Ular Rugi ke Kotak ${targetTile}!`);
+          showToast(`Tergelincir Ular Rugi ke Kotak ${targetTile}! 📉`, 'error');
+        }
+      } else {
+        if (answeredCorrectly) {
+          player.score += 100;
+          setLog(`✅ ${player.name} menjawab benar di Kotak ${currentTile} (+100 Poin).`);
+        } else {
+          if (player.pos > 1) {
+            player.pos -= 1;
+            updatePawnsPosition();
+          }
+          setLog(`❌ ${player.name} salah menjawab dan mundur 1 langkah ke Kotak ${player.pos}.`);
+          showToast(`Mundur 1 langkah ke Kotak ${player.pos}`, 'warning');
+        }
+      }
+
+      updateHUD();
+
+      // Cek jika setelah naik tangga langsung mencapai Kotak 25
+      if (player.pos >= TOTAL_TILES) {
+        player.pos = TOTAL_TILES;
+        player.score += 500;
+        updatePawnsPosition();
+        updateHUD();
+        setTimeout(() => triggerGameOver(player), 450);
+        return;
+      }
+
+      // Ganti giliran ke pemain berikutnya
+      gameState.currentPlayerIndex = gameState.currentPlayerIndex === 0 ? 1 : 0;
+      gameState.isBusy = false;
+      gameState.pendingQuizContext = null;
+
+      const nextPlayer = gameState.players[gameState.currentPlayerIndex];
+      document.getElementById('dice-status-text').textContent = `Giliran ${nextPlayer.name}! Tekan kocok dadu.`;
+      updateHUD();
+    }
+
+    /* ===========================================================
+       10. GAME OVER, KONFETI & PENYIMPANAN LEADERBOARD
+       =========================================================== */
+    function triggerGameOver(winner) {
+      SoundFX.win();
+      launchConfetti();
+
+      // Hitung bonus efisiensi lemparan (semakin sedikit lemparan, semakin tinggi skor)
+      const efficiencyBonus = Math.max(100, (30 - winner.rolls) * 25);
+      winner.score += efficiencyBonus;
+
+      const totalMatchRolls = gameState.players[0].rolls + gameState.players[1].rolls;
+
+      document.getElementById('winner-name').textContent = `${winner.name} (${winner.color === 'red' ? 'Merah' : 'Biru'})`;
+      document.getElementById('winner-team').textContent = gameState.team;
+      document.getElementById('stat-winner-rolls').textContent = winner.rolls;
+      document.getElementById('stat-winner-correct').textContent = winner.correct;
+      document.getElementById('stat-winner-score').textContent = winner.score;
+      document.getElementById('stat-total-match-rolls').textContent =
+        `Total lemparan dadu seluruh pertandingan: ${totalMatchRolls} kali`;
+
+      saveToLeaderboard({
+        name: winner.name,
+        team: gameState.team,
+        score: winner.score,
+        rolls: winner.rolls,
+        correct: winner.correct,
+        date: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+      });
+
+      showScreen('gameover');
+    }
+
+    function launchConfetti() {
+      const colors = ['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+      for (let i = 0; i < 48; i++) {
+        const conf = document.createElement('div');
+        conf.className = 'confetti rounded-sm';
+        conf.style.left = `${Math.random() * 100}vw`;
+        conf.style.width = `${8 + Math.random() * 8}px`;
+        conf.style.height = `${8 + Math.random() * 8}px`;
+        conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        conf.style.animationDuration = `${2.2 + Math.random() * 2}s`;
+        conf.style.animationDelay = `${Math.random() * 0.6}s`;
+        document.body.appendChild(conf);
+        setTimeout(() => conf.remove(), 4800);
+      }
+    }
+
+    function getLeaderboardData() {
+      try {
+        const raw = localStorage.getItem(LEADERBOARD_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {
+        // Fallback jika localStorage diblokir
+      }
+
+      // Data contoh awal agar podium 3 besar langsung tampil menarik
+      return [
+        { name: 'Siti Rahma', team: 'Kelas 8B - SMPN 1 Nusantara', score: 1350, rolls: 7, correct: 6, date: 'Contoh' },
+        { name: 'Dimas Pratama', team: 'Kelas 8A - SMPN 2 Harapan', score: 1180, rolls: 9, correct: 5, date: 'Contoh' },
+        { name: 'Aulia Putri', team: 'Kelas 8C - SMPN 5 Merdeka', score: 1020, rolls: 10, correct: 4, date: 'Contoh' }
+      ];
+    }
+
+    function saveToLeaderboard(entry) {
+      try {
+        const list = getLeaderboardData();
+        list.push(entry);
+        // Urutkan berdasarkan skor tertinggi, lalu jumlah lemparan paling sedikit
+        list.sort((a, b) => b.score - a.score || a.rolls - b.rolls);
+        const top15 = list.slice(0, 15);
+        localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(top15));
+      } catch (e) {
+        showToast('Tidak dapat menyimpan ke penyimpanan lokal browser.', 'warning');
+      }
+    }
+
+    function renderLeaderboard() {
+      const data = getLeaderboardData();
+      data.sort((a, b) => b.score - a.score || a.rolls - b.rolls);
+
+      const podiumContainer = document.getElementById('podium-container');
+      const listContainer = document.getElementById('leaderboard-list');
+
+      // Susun Podium: Juara 2 (kiri), Juara 1 (tengah), Juara 3 (kanan)
+      const podiumOrder = [
+        { rank: 2, item: data[1], height: 'h-24 sm:h-28', bg: 'from-slate-200 to-slate-300 border-slate-400', medal: '🥈' },
+        { rank: 1, item: data[0], height: 'h-32 sm:h-36', bg: 'from-amber-200 to-yellow-400 border-amber-500', medal: '🥇' },
+        { rank: 3, item: data[2], height: 'h-20 sm:h-24', bg: 'from-orange-200 to-amber-300 border-orange-400', medal: '🥉' }
+      ];
+
+      podiumContainer.innerHTML = '';
+      podiumOrder.forEach(slot => {
+        const div = document.createElement('div');
+        div.className = 'flex flex-col items-center text-center';
+        if (slot.item) {
+          div.innerHTML = `
+            <span class="text-2xl sm:text-3xl mb-1">${slot.medal}</span>
+            <p class="font-extrabold text-xs sm:text-sm text-slate-800 truncate w-full px-1">${slot.item.name}</p>
+            <p class="text-[10px] sm:text-xs font-semibold text-slate-500 truncate w-full px-1 mb-1.5">${slot.item.team}</p>
+            <div class="w-full ${slot.height} rounded-t-2xl bg-gradient-to-b ${slot.bg} border-t-4 border-x-4 flex flex-col items-center justify-center p-1 shadow-inner">
+              <span class="font-extrabold text-sm sm:text-base text-slate-900">${slot.item.score} pts</span>
+              <span class="text-[10px] font-bold text-slate-700">🎲 ${slot.item.rolls}x</span>
+            </div>
+          `;
+        } else {
+          div.innerHTML = `
+            <span class="text-2xl opacity-30 mb-1">${slot.medal}</span>
+            <div class="w-full ${slot.height} rounded-t-2xl bg-slate-100 border-t-2 border-x-2 border-slate-200 flex items-center justify-center text-xs text-slate-400 font-bold">
+              Kosong
+            </div>
+          `;
+        }
+        podiumContainer.appendChild(div);
+      });
+
+      // Render Daftar Lengkap
+      listContainer.innerHTML = '';
+      if (data.length === 0) {
+        listContainer.innerHTML = `<p class="p-4 text-center text-sm text-slate-500">Belum ada skor tercatat.</p>`;
+        return;
+      }
+
+      data.forEach((entry, idx) => {
+        const row = document.createElement('div');
+        row.className = 'px-4 py-3 flex items-center justify-between gap-2 bg-white hover:bg-amber-50/60 transition-colors';
+        row.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 font-extrabold text-xs flex items-center justify-center shrink-0">
+              #${idx + 1}
+            </span>
+            <div class="min-w-0">
+              <p class="font-bold text-sm text-slate-800 truncate">${entry.name}</p>
+              <p class="text-xs font-medium text-slate-500 truncate">${entry.team} • ${entry.date || ''}</p>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="font-extrabold text-sm text-emerald-600">${entry.score} Poin</p>
+            <p class="text-[11px] font-semibold text-slate-500">🎲 ${entry.rolls} lemparan</p>
+          </div>
+        `;
+        listContainer.appendChild(row);
+      });
+    }
+
+    function confirmClearLeaderboard() {
+      showConfirmModal(
+        'Reset Data Leaderboard?',
+        'Semua catatan pemenang yang tersimpan di perangkat ini akan dihapus.',
+        () => {
+          localStorage.removeItem(LEADERBOARD_KEY);
+          renderLeaderboard();
+          showToast('Data leaderboard berhasil direset!', 'info');
+        }
+      );
+    }
+
+    // Inisialisasi tampilan awal dadu saat halaman dimuat
+    window.addEventListener('DOMContentLoaded', () => {
+      renderDiceFace(6);
+    });
+  </script>
+</body>
+</html>
